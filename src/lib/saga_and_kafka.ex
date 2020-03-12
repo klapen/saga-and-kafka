@@ -13,7 +13,7 @@ defmodule SagaAndKafka do
     _effects_so_far,
     %{brakes_pid: brakes_pid}
   ) do
-    EventProducer.send_event({"order.create", "Waiting for confirmation " <> "#{DateTime.utc_now}"}, "oas_topic")
+    EventProducer.send_event("order.create", "Waiting for confirmation " <> "#{DateTime.utc_now}")
     BrakesSupplier.order(brakes_pid)
   end
 
@@ -23,6 +23,7 @@ defmodule SagaAndKafka do
     {:brakes, {:brakes, :no_response}},
     _attrs
   ) do
+    EventProducer.send_event("order.retry", "Retry order brakes " <> "#{DateTime.utc_now}")
     {:retry, retry_limit: 2}
   end
 
@@ -32,6 +33,7 @@ defmodule SagaAndKafka do
     _error,
     _attrs
   ) do
+    EventProducer.send_event("order.error", "Couldn't order brakes " <> "#{DateTime.utc_now}")
     :ok
   end
 end
