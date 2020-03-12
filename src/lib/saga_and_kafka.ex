@@ -13,8 +13,7 @@ defmodule SagaAndKafka do
     _effects_so_far,
     %{brakes_pid: brakes_pid}
   ) do
-    # SagaEvents.send_event({"order.create", "Waiting for confirmation " <> "#{DateTime.utc_now}"}, "oas_topic")
-    SagaEvents.send_event("order.create", "Waiting for confirmation " <> "#{DateTime.utc_now}")
+    EventProducer.send_event({"order.create", "Waiting for confirmation " <> "#{DateTime.utc_now}"}, "oas_topic")
     BrakesSupplier.order(brakes_pid)
   end
 
