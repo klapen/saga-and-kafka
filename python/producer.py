@@ -1,7 +1,9 @@
 import sys, getopt
 from datetime import datetime
-import kafka
-from kafka import KafkaProducer
+
+from confluent_kafka import avro
+from confluent_kafka.avro import AvroProducer
+from confluent_kafka import KafkaError
 
 if __name__ == '__main__':
     argv = sys.argv[1:]
@@ -32,7 +34,7 @@ if __name__ == '__main__':
         elif opt in ("-t","--topic"):
             topic = arg
         elif opt in ("--key"):
-            key = arg.encode('utf-8')
+            key = arg
         elif opt in ("--value"):
             value = arg
 
@@ -40,13 +42,23 @@ if __name__ == '__main__':
         print('Error -> Topic, Key and Value are required')
     else:
         try:
-            producer = KafkaProducer(bootstrap_servers='localhost:9092')
-            now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            value = "{0} - {1}".format(value,now)
+            value_schema = avro.load('../avro/ValueSchema.avsc')
+            key_schema = avro.load('../avro/KeySchema.avsc')
+            key = key
             
-            producer.send(topic, key=key, value=value.encode('utf-8')).get()
-            print('Message sent.')
+            now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            value = { 'title': 'Time {0}'.format(now), 'message': value }
+            
+            avroProducer = AvroProducer({
+                'bootstrap.servers': 'localhost:9092',
+                'group.id': 'saga-and-kafka',
+                'schema.registry.url': 'http://localhost:8081'
+            }, default_key_schema=key_schema, default_value_schema=value_schema)
+
+            avroProducer.produce(topic=topic, value=value, key=key, key_schema=key_schema, value_schema=value_schema)
+            avroProducer.flush(1)
+            print('Message sent. Timestamp = {0}'.format(now))
             print('Bye!')
-        except kafka.errors.NoBrokersAvailable:
-            print("Error -> Can't find any Kafka broker on localhost:9092. Please, turn it on")
+        except KafkaError as ex:
+            print("Error -> Exception on Kafka server (localhost:9092): {0}".format(ex))
             sys.exit(2)
