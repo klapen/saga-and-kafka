@@ -41,7 +41,7 @@ To use the Python consumer or producer, you need to install [kafka-python](https
 ```bash
 $ pip install kafka-python
 $ cd path/to/saga-and-kafka
-$ cd python
+$ cd python/plain
 $ python consumer.py -t example_topic
 ```
 
@@ -49,7 +49,7 @@ To test it is working, open a new terminal and send a message with the producer.
 
 ```bash
 $ cd path/to/saga-and-kafka
-$ cd python
+$ cd python/plain
 $ python producer.py -t example_topic --key=msg_one --value="test value"
 ```
 
